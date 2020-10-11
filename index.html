@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>BudgetApp</title>
+	<script src="https://kit.fontawesome.com/a5a263efaf.js" crossorigin="anonymous"></script>
+	<link href="https://fonts.googleapis.com/css2?family=Quicksand&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+	<div class="container">
+		<h1 id="main-header">Budget<span>App</span></h1>
+		<div class="budget-categories-container">
+			<div class="income-card card">
+				<div class="card-symbol-container">
+					<i class="fas fa-wallet"></i>				
+				</div>
+				<h3 class="card-header">Income</h3>
+				<form class="form-container" action="submit">
+					<input class="add-input-text" id="income-input-text" type="text" placeholder="Enter Your Income">
+					<input class="input-number" type="number" id="income-input-number" placeholder="1000">
+					<button class="add-item-btn" id="add-income-btn">Add Income</button>
+				</form>
+			</div>
+			<div class="expense-card card">
+				<div class="card-symbol-container">
+					<i class="fas fa-money-bill-wave"></i>
+				</div>
+				<h3 class="card-header">Expenses</h3>
+				<form class="form-container" action="submit">
+					<input class="add-input-text" id="expenses-input-text" type="text" placeholder="Enter Your Expenses">
+					<input class="input-number" type="number" id="expenses-input-number" placeholder="1000">
+					<button class="add-item-btn" id="add-expenses-btn">Add Expense</button>
+				</form>
+			</div>
+			<div class="balance-card card">
+				<div class="card-symbol-container">
+					<i class="fas fa-dollar-sign"></i>
+				</div>
+				<h3 class="card-header">Balance</h3>
+				<div class="total-balance-container">
+					<span id="currency-symbol">$</span><p id="total-balance">5000</p>
+				</div>
+			</div>
+		</div>
+		<div class="items-list-container">
+			<h3 id="list-header">Budget Details</h3>
+			<div class="item-list income-list">
+				<h3 id="income-list-header">Income</h3>
+				<h4 class="total">$<span id="total-income">6000</span></h4>
+				<!--
+				<div class="item">
+					<div class="item-info">
+						<p class="item-title">Freelance Income</p>
+						<div class="item-value">$3250</div>
+					</div>
+					<div class="item-btn-container">
+						<button class="edit-btn">
+							<i class="fas fa-edit"></i>
+						</button>
+						<button class="delete-btn">&times;</button>
+					</div>
+				</div>
+			-->
+			</div>
+			<div class="item-list expenses-list">
+				<h3 id="expenses-list-header">Expenses</h3>
+				<h4 class="total">$<span id="total-expenses">1000</span></h4>
+			</div>
+		</div>
+	</div>
+	<script src="app.js"></script>
+</body>
+</html>

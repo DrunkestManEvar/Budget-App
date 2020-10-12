@@ -8,13 +8,14 @@ class App {
 		this.incomeInputNumber = document.getElementById('income-input-number');
 		this.expensesInputNumber = document.getElementById('expenses-input-number');
 		this.addIncomeBtn = document.getElementById('add-income-btn');
+		this.editIncomeBtn = document.getElementById('edit-income-btn');
 		this.addExpensesBtn = document.getElementById('add-expenses-btn');
+		this.editExpensesBtn = document.getElementById('edit-expenses-btn');
 		this.totalBalance = document.getElementById('total-balance');
 		this.totalIncome = document.getElementById('total-income');
 		this.totalExpenses = document.getElementById('total-expenses');
 		this.incomeList = document.querySelector('.income-list');
 		this.expensesList = document.querySelector('.expenses-list');
-		this.editing = false;
 	}
 
 	getID() {
@@ -31,8 +32,6 @@ class App {
 
 	addIncome(e) {
 		e.preventDefault();
-		if (this.editing === true) return;
-		console.log(this.editing)
 
 		if (!this.incomeInputText.value || (!this.incomeInputNumber.value || this.incomeInputNumber <= 0)) {
 			this.declineItemAdding(e);
@@ -44,7 +43,6 @@ class App {
 				value: incomeValue,
 				ID: this.ID
 				};
-			console.log('added')
 			this.savedIncome.push(incomeObj);
 			this.ID++;
 
@@ -52,7 +50,7 @@ class App {
 			this.incomeInputNumber.value = '';
 			this.showIncome(this.savedIncome, incomeObj.ID);
 			this.saveToLocalStorage('income', this.savedIncome);
-			this.calcBalance();
+			this.calcBalance(this.getIncomeFromLocalStorage(), this.getExpensesFromLocalStorage());
 		}
 	}
 
@@ -79,28 +77,29 @@ class App {
 	addExpenses(e) {
 		e.preventDefault();
 
-		if (this.editing === true) {
-			return;
-		}
-
 		if (!this.expensesInputText.value || !this.expensesInputNumber.value) {
 			this.declineItemAdding(e);
 		} else {
-			const expensesTitle = this.expensesInputText.value;
-			const expensesValue = this.expensesInputNumber.value;
-			const expensesObj = {
-				title: expensesTitle,
-				value: expensesValue,
-				ID: this.ID
-			}
-			this.savedExpenses.push(expensesObj);
-			this.ID++;
+			if (this.addIncomeBtn.textContent === 'Edit Income') {
+				console.log('fuck you');
+				return;
+			} else if (this.addIncomeBtn.textContent === 'Add Income') {				
+				const expensesTitle = this.expensesInputText.value;
+				const expensesValue = this.expensesInputNumber.value;
+				const expensesObj = {
+					title: expensesTitle,
+					value: expensesValue,
+					ID: this.ID
+				}
+				this.savedExpenses.push(expensesObj);
+				this.ID++;
 
-			this.expensesInputText.value = '';
-			this.expensesInputNumber.value = '';
-			this.showExpenses(this.savedExpenses, expensesObj.ID);
-			this.saveToLocalStorage('expenses', this.savedExpenses);
-			this.calcBalance();			
+				this.expensesInputText.value = '';
+				this.expensesInputNumber.value = '';
+				this.showExpenses(this.savedExpenses, expensesObj.ID);
+				this.saveToLocalStorage('expenses', this.savedExpenses);
+				this.calcBalance(this.getIncomeFromLocalStorage(), this.getExpensesFromLocalStorage());			
+			}
 		}	
 	}
 
@@ -124,18 +123,19 @@ class App {
 		this.expensesList.innerHTML += itemsInHTML[itemsInHTML.length - 1];
 	}
 
-	calcBalance() {
-		const totalIncomeValue = this.savedIncome.reduce((acc, curr) => {
+	calcBalance(incomeArray, expensesArray) {
+		const totalIncomeValue = incomeArray.reduce((acc, curr) => {
 			acc += parseInt(curr.value);
 			return acc;
 		}, 0);
 	
-		const totalExpensesValue = this.savedExpenses.reduce((acc, curr) => {
+		const totalExpensesValue = expensesArray.reduce((acc, curr) => {
 			acc += parseInt(curr.value);
 			return acc;
 		}, 0);
 
 		const totalBalanceValue = totalIncomeValue - totalExpensesValue;
+
 		if (totalBalanceValue < 0) {
 			this.totalBalance.classList.remove('negative-balance');
 			this.totalBalance.classList.remove('positive-balance');
@@ -148,9 +148,9 @@ class App {
 			this.totalBalance.className = '';
 		}
 
-		this.totalBalance.innerText = totalBalanceValue;
-		this.totalExpenses.innerText = totalExpensesValue;
-		this.totalIncome.innerText = totalIncomeValue;
+		this.totalBalance.textContent = totalBalanceValue;
+		document.getElementById('total-expenses').textContent = totalExpensesValue;
+		document.getElementById('total-income').textContent = totalIncomeValue;
 	}
 
 	declineItemAdding(e) {
@@ -180,6 +180,7 @@ class App {
 				return acc;
 			}, [])
 			this.saveToLocalStorage('income', newList);
+			this.calcBalance(this.getIncomeFromLocalStorage(), this.getExpensesFromLocalStorage())
 		} else {
 			itemToDeleteFromLocalStorage = this.getExpensesFromLocalStorage().find(item => item.ID === ID);
 			const newList = this.getExpensesFromLocalStorage().reduce((acc, curr) => {
@@ -189,56 +190,77 @@ class App {
 				return acc;
 			}, [])
 			this.saveToLocalStorage('expenses', newList);
+			this.calcBalance(this.getIncomeFromLocalStorage(), this.getExpensesFromLocalStorage())
 		}
-		this.calcBalance();
 		listToDeleteFrom.removeChild(itemToDelete);
 	}
 
-	editItem(itemToEdit, ID, listToDeleteFrom) {
-		this.editing = true;
+	editItem(itemToEdit, ID) {
 		let itemToEditInLocalStorage;
 		if (this.getIncomeFromLocalStorage().find(item => item.ID === ID)) {
-			console.log(ID);
+			this.addIncomeBtn.classList.add('hide-btn');
+			this.editIncomeBtn.classList.remove('hide-btn');
 			itemToEditInLocalStorage = this.getIncomeFromLocalStorage().find(item => item.ID === ID);
-			const editedItemIndex = this.getIncomeFromLocalStorage().indexOf(itemToEditInLocalStorage);
+			const editedItemIndex = this.getIncomeFromLocalStorage().findIndex(i => i.ID === ID);
 			const { title, value } = itemToEditInLocalStorage;
 			this.incomeInputText.value = title;
 			this.incomeInputNumber.value = value;
-			const editedItemNewTitle = this.incomeInputText.value;
-			const editedItemNewNumber = this.incomeInputNumber.value;
-			this.addIncomeBtn.addEventListener('click', () => {
-				const editedItem = {
-					title: editedItemNewTitle,
-					value: editedItemNewNumber,
-					ID: ID
-				}
-				const newList = this.getIncomeFromLocalStorage().reduce((acc, curr) => {
-					if (parseInt(curr.ID) !== ID) {
-						console.log('current ID is ' + curr.ID + ' and ID is ' + ID)
-						acc.push(curr)
+			this.editIncomeBtn.addEventListener('click', e => {
+				e.preventDefault();
+				if (!this.incomeInputText.value || (!this.incomeInputNumber.value || this.incomeInputNumber <= 0)) {
+					this.declineItemAdding(e);
+				} else {
+					const editedTitle = this.incomeInputText.value;
+					const editedValue = this.incomeInputNumber.value;
+					const editedItem = {
+						title: editedTitle,
+						value: editedValue,
+						ID
 					}
-					return acc;
-				}, [])
-				this.saveToLocalStorage('income', newList);
+					this.saveToLocalStorage('income', this.getIncomeFromLocalStorage().map(item => item.ID === ID ? editedItem : item));
+					itemToEdit.children[0].children[0].innerText = editedTitle;
+					itemToEdit.children[0].children[1].innerText = '$' + editedValue;
+					ID = '';
+					itemToEdit = '';
+					this.incomeInputText.value = '';
+					this.incomeInputNumber.value = '';
+					this.editIncomeBtn.classList.add('hide-btn');
+					this.addIncomeBtn.classList.remove('hide-btn');
+					this.calcBalance(this.getIncomeFromLocalStorage(), this.getExpensesFromLocalStorage());
+				}
 			})
 		} else {
 			itemToEditInLocalStorage = this.getExpensesFromLocalStorage().find(item => item.ID === ID);
-			const editedItemIndex = this.getExpensesFromLocalStorage().indexOf(itemToEditInLocalStorage);
+			this.addExpensesBtn.classList.add('hide-btn');
+			this.editExpensesBtn.classList.remove('hide-btn');
 			const { title, value } = itemToEditInLocalStorage;
 			this.expensesInputText.value = title;
 			this.expensesInputNumber.value = value;
-			this.addIncomeBtn.addEventListener('click', () => {
-				const editedItem = {
-					title: this.expensesInputText.value,
-					value: this.expensesInputNumber.value,
-					ID
+			this.editExpensesBtn.addEventListener('click', (e) => {
+				e.preventDefault();
+				if (!this.expensesInputText.value || (this.expensesInputNumber.value < 0 || !this.expensesInputNumber.value)) {
+					this.declineItemAdding(e)
+				} else {
+					const editedTitle = this.expensesInputText.value;
+					const editedValue = this.expensesInputNumber.value;
+					const editedItem = {
+						title: editedTitle,
+						value: editedValue,
+						ID
+					}
+					this.saveToLocalStorage('expenses', this.getExpensesFromLocalStorage().map(item => item.ID === ID ? editedItem : item));
+					itemToEdit.children[0].children[0].innerText = editedTitle;
+					itemToEdit.children[0].children[1].innerText = '$' + editedValue;
+					ID = '';
+					itemToEdit = '';
+					this.expensesInputText.value = '';
+					this.expensesInputNumber.value = '';
+					this.editExpensesBtn.classList.add('hide-btn');
+					this.addExpensesBtn.classList.remove('hide-btn');
+					this.calcBalance(this.getIncomeFromLocalStorage(), this.getExpensesFromLocalStorage());
 				}
-				const newList = this.getExpensesFromLocalStorage().splice(editedItemIndex, 1, editedItem);
-				this.saveToLocalStorage('expenses', newList);
 			})
 		}
-		this.calcBalance();
-		this.editing = false;
 	}
 
 	saveToLocalStorage(type, itemArray) {
@@ -303,7 +325,7 @@ class App {
 					this.expensesList.appendChild(itemDiv);
 				})
 			}
-			this.calcBalance();
+			this.calcBalance(this.getIncomeFromLocalStorage(), this.getExpensesFromLocalStorage());
 		}
 	}
 }
@@ -329,15 +351,24 @@ document.addEventListener('DOMContentLoaded', () => {
 	})
 	budgetApp.incomeList.addEventListener('click', (e) => {
 		if (e.target.classList.contains('fa-edit')) {
-			const itemToEdit = e.target.parentElement.parentElement.parentElement;
-			const ID = parseInt(itemToEdit.firstElementChild.dataset.id);
-			const listToDeleteFrom = itemToEdit.parentElement;
-			budgetApp.editItem(itemToEdit, ID, listToDeleteFrom);
+			let itemToEdit = e.target.parentElement.parentElement.parentElement;
+			let ID = parseInt(itemToEdit.firstElementChild.dataset.id);
+			budgetApp.editItem(itemToEdit, ID);
 		} else if (e.target.classList.contains('edit-btn')) {
-			const itemToEdit = e.target.parentElement.parentElement;
-			const ID = parseInt(itemToEdit.firstElementChild.dataset.id);
-			const listToDeleteFrom = itemToEdit.parentElement;
-			budgetApp.editItem(itemToEdit, ID, listToDeleteFrom);
+			let itemToEdit = e.target.parentElement.parentElement;
+			let ID = parseInt(itemToEdit.firstElementChild.dataset.id);
+			budgetApp.editItem(itemToEdit, ID);
+		}
+	})
+	budgetApp.expensesList.addEventListener('click', (e) => {
+		if (e.target.classList.contains('fa-edit')) {
+			let itemToEdit = e.target.parentElement.parentElement.parentElement;
+			let ID = parseInt(itemToEdit.firstElementChild.dataset.id);
+			budgetApp.editItem(itemToEdit, ID);
+		} else if (e.target.classList.contains('edit-btn')) {
+			let itemToEdit = e.target.parentElement.parentElement;
+			let ID = parseInt(itemToEdit.firstElementChild.dataset.id);
+			budgetApp.editItem(itemToEdit, ID);
 		}
 	})
 })
